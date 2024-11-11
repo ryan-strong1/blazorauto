@@ -1,0 +1,58 @@
+@Auto.API_HostAddress = https://localhost:54111
+
+### Get all autos
+GET {{Auto.API_HostAddress}}/api/autos
+Accept: application/json
+
+### Search autos
+GET {{Auto.API_HostAddress}}/api/autos/search?make=Toyota&model=Camry
+Accept: application/json
+
+### Get auto by ID
+GET {{Auto.API_HostAddress}}/api/autos/1
+Accept: application/json
+
+### Delete auto by ID
+DELETE {{Auto.API_HostAddress}}/api/autos/1
+Accept: application/json
+
+### Create a new offer
+POST http://localhost:5000/api/offers
+Content-Type: application/json
+
+{
+  "AutoId": 1,
+  "UserId": 1,
+  "Amount": 10000.00
+}
+
+### Get all offers
+GET http://localhost:5000/api/offers
+
+### Get offer by ID
+GET http://localhost:5000/api/offers/1
+
+### Delete offer by ID
+DELETE http://localhost:5000/api/offers/1
+###
+
+### Get all users
+GET {{Auto.API_HostAddress}}/api/users
+Accept: application/json
+
+### Get user by ID
+GET {{Auto.API_HostAddress}}/api/users/1
+Accept: application/json
+
+### Get user by email
+GET {{Auto.API_HostAddress}}/api/users/email/user@example.com
+Accept: application/json
+
+### Get autos by user ID
+GET {{Auto.API_HostAddress}}/api/users/1/autos
+Accept: application/json
+
+### Delete user by ID
+DELETE {{Auto.API_HostAddress}}/api/users/1
+Accept: application/json
+

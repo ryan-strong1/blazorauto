@@ -1,0 +1,23 @@
+services:
+  auto.api:
+    image: ${DOCKER_REGISTRY-}autoapi
+    build:
+      context: .
+      dockerfile: src/Auto.API/Dockerfile
+    environment:
+      - ConnectionStrings:AutoCS=${ConnectionStrings_AutoCS}
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserver_auto
+    environment:
+      SA_PASSWORD: ${SA_PASSWORD}
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserverdata:/var/opt/mssql
+
+volumes:
+  sqlserverdata:
+    driver: local
