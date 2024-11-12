@@ -2,20 +2,21 @@
 using System.Text.Json;
 using System.Net;
 using FluentValidation;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Auto.API.Middleware
 {
-    /// <summary>
-    /// Handles all unhandled exceptions in the application and returns a ApiResponse response with the error details.
-    /// If the exception is a ValidationException, the response will include validation errors.
-    /// </summary>
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ProblemDetailsFactory _problemDetailsFactory;
 
-        public ExceptionMiddleware(RequestDelegate next)
+        public ExceptionMiddleware(RequestDelegate next, ProblemDetailsFactory problemDetailsFactory)
         {
             _next = next;
+            _problemDetailsFactory = problemDetailsFactory;
         }
 
         public async Task InvokeAsync(HttpContext httpContext)
@@ -33,55 +34,50 @@ namespace Auto.API.Middleware
         private Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";
+            context.Response.Headers["Cache-Control"] = "no-cache";
 
-            ApiResponse<object> response;
+            ProblemDetails response = new ProblemDetails();
 
             if (exception is ValidationException validationException)
             {
-                // If the exception is a ValidationException, return validation errors
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 
-                // Collect validation errors, grouped by property name
                 var validationErrors = validationException.Errors
                     .GroupBy(e => e.PropertyName)
                     .ToDictionary(
                         g => g.Key,
                         g => g.Select(e => e.ErrorMessage).ToList());
 
-                response = new ApiResponse<object>
-                {
-                    Success = false,
-                    Message = "Validation failed",
-                    Data = null,
-                    ValidationErrors = validationErrors
-                };
+                response = _problemDetailsFactory.CreateProblemDetails(
+                    context,
+                    statusCode: (int)HttpStatusCode.BadRequest,
+                    title: "Validation failed",
+                    detail: "One or more validation errors occurred.");
+
+                response.Extensions.Add("validationErrors", validationErrors);
             }
             else
             {
-                // exception, return a generic internal server error
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
                 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
                 {
                     var errorId = Guid.NewGuid().ToString();
-                    //TODO: Log the exceptionwith the error ID
-                    response = new ApiResponse<object>
-                    {
-                        Success = false,
-                        Message = $"An unexpected error occurred. Error ID: {errorId}",
-                        Data = null,
-                        Errors = new List<string> { "An unexpected error occurred. Please contact support with the error ID." }
-                    };
+                    //TODO: Log the exception with the error ID
+
+                    response = _problemDetailsFactory.CreateProblemDetails(
+                    context,
+                    statusCode: (int)HttpStatusCode.InternalServerError,
+                    title: "An unexpected error occurred",
+                    detail: "An unexpected error occurred. Please use the error ID for support: " + errorId);
                 }
                 else
                 {
-                    response = new ApiResponse<object>
-                    {
-                        Success = false,
-                        Message = "An unexpected error occurred",
-                        Data = null,
-                        Errors = new List<string> { exception.Message }
-                    };
+                    response = _problemDetailsFactory.CreateProblemDetails(
+                        context,
+                        statusCode: (int)HttpStatusCode.InternalServerError,
+                        title: "An unexpected error occurred",
+                        detail: exception.Message);
                 }
             }
 
