@@ -21,6 +21,8 @@ namespace Auto.API.Controllers
 
         [HttpPost]
         [ProducesResponseType(typeof(ApiResponse<AutoDto>), 201)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), 400)]
+        [ProducesResponseType(typeof(ProblemDetails), 500)]
         public async Task<ActionResult<ApiResponse<AutoDto>>> CreateAuto(CreateAutoDto createAutoDto)
         {
             var auto = await _autoService.CreateAuto(createAutoDto);
