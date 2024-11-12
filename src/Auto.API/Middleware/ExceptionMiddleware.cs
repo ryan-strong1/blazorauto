@@ -1,13 +1,16 @@
-﻿using Auto.API.Models;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Net;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Azure;
 
 namespace Auto.API.Middleware
 {
+    /// <summary>
+    /// Middleware to handle exceptions and return a consistent error response
+    /// </summary>
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
@@ -36,8 +39,6 @@ namespace Auto.API.Middleware
             context.Response.ContentType = "application/json";
             context.Response.Headers["Cache-Control"] = "no-cache";
 
-            ProblemDetails response = new ProblemDetails();
-
             if (exception is ValidationException validationException)
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -48,16 +49,25 @@ namespace Auto.API.Middleware
                         g => g.Key,
                         g => g.Select(e => e.ErrorMessage).ToList());
 
-                response = _problemDetailsFactory.CreateProblemDetails(
-                    context,
-                    statusCode: (int)HttpStatusCode.BadRequest,
-                    title: "Validation failed",
-                    detail: "One or more validation errors occurred.");
+                var modelStateDictionary = new ModelStateDictionary();
+                foreach (var error in validationErrors)
+                {
+                    modelStateDictionary.AddModelError(error.Key, error.Value.First());
+                }
 
-                response.Extensions.Add("validationErrors", validationErrors);
+                var response = _problemDetailsFactory.CreateValidationProblemDetails(
+                     context,
+                     statusCode: (int)HttpStatusCode.BadRequest,
+                     title: "Validation failed",
+                     detail: "One or more validation errors occurred.",
+                     modelStateDictionary: modelStateDictionary);
+
+                var jsonResponse = JsonSerializer.Serialize(response);
+                return context.Response.WriteAsync(jsonResponse);
             }
             else
             {
+                ProblemDetails response = new ProblemDetails();
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
                 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
@@ -79,10 +89,10 @@ namespace Auto.API.Middleware
                         title: "An unexpected error occurred",
                         detail: exception.Message);
                 }
-            }
 
-            var jsonResponse = JsonSerializer.Serialize(response);
-            return context.Response.WriteAsync(jsonResponse);
+                var jsonResponse = JsonSerializer.Serialize(response);
+                return context.Response.WriteAsync(jsonResponse);
+            }
         }
     }
 }

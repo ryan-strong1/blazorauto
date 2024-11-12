@@ -20,7 +20,6 @@ namespace Auto.API.Controllers
 
         [HttpPost]
         [ProducesResponseType(typeof(ApiResponse<OfferDto>), 201)]
-        [ProducesResponseType(typeof(ApiResponse<string>), 400)]
         public async Task<ActionResult<ApiResponse<OfferDto>>> CreateOffer(CreateOfferDto createOfferDto)
         {
             var offer = await _offerService.CreateOffer(createOfferDto);
@@ -32,7 +31,6 @@ namespace Auto.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<OfferDto>>), 200)]
-        [ProducesResponseType(404)]
         public async Task<ActionResult<ApiResponse<IEnumerable<OfferDto>>>> GetOffers()
         {
             var offers = await _offerService.GetOffers();
@@ -41,15 +39,15 @@ namespace Auto.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(OfferDto), 200)]
-        [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(ApiResponse<OfferDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<string>), 404)]
         public async Task<ActionResult<ApiResponse<OfferDto>>> GetOfferById(int id)
         {
             var offer = await _offerService.GetOfferById(id);
 
             if (offer == null)
             {
-                return NotFound(new ApiResponse<OfferDto>("Offer not found", success: false));
+                return NotFound(new ApiResponse<string>("Offer not found", success: false));
             }
 
             return Ok(new ApiResponse<OfferDto>(offer, message: "Offer retrieved successfully"));
