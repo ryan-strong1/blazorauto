@@ -1,4 +1,4 @@
-@Auto.API_HostAddress = https://localhost:54111
+@Auto.API_HostAddress = https://localhost:55644
 
 ### Get all autos
 GET {{Auto.API_HostAddress}}/api/autos
@@ -7,6 +7,22 @@ Accept: application/json
 ### Search autos
 GET {{Auto.API_HostAddress}}/api/autos/search?make=Toyota&model=Camry
 Accept: application/json
+
+### Create Auto
+POST {{Auto.API_HostAddress}}/api/autos
+Content-Type: application/json
+
+{
+  "Make": "Toyota",
+  "Model": "Camry",
+  "Condition": "New",
+  "ModelYear": 2023,
+  "Mileage": 3,
+  "Description": "A brand new Toyota Camry",
+  "Color": "White",
+  "Price": 30000,
+  "UserId": 1
+}
 
 ### Get auto by ID
 GET {{Auto.API_HostAddress}}/api/autos/1

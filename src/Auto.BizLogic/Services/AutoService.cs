@@ -2,11 +2,15 @@
 using System.Linq;
 using Auto.BizLogic.Mapping;
 using Auto.BizLogic.Models.Dto;
+using Auto.Data.Entities;
+using FluentValidation;
 
 namespace Auto.BizLogic.Services
 {
     public interface IAutoService
     {
+        Task<AutoDto> CreateAuto(CreateAutoDto createAutoDto);
+
         Task<IList<string>> GetAllMakes();
 
         Task<IList<string>> GetAllMakes(string make);
@@ -25,10 +29,41 @@ namespace Auto.BizLogic.Services
     public class AutoService : IAutoService
     {
         private readonly IAutoRepository _autoRepository;
+        private readonly IValidator<CreateAutoDto> _autoValidator;
 
-        public AutoService(IAutoRepository autoRepository)
+        public AutoService(IAutoRepository autoRepository, IValidator<CreateAutoDto> autoValidator)
         {
             _autoRepository = autoRepository;
+            _autoValidator = autoValidator;
+        }
+
+        public async Task<AutoDto> CreateAuto(CreateAutoDto createAutoDto)
+        {
+            var validationResult = await _autoValidator.ValidateAsync(createAutoDto);
+
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
+
+            var autoEntity = new AutoEntity()
+            {
+                Make = createAutoDto.Make,
+                Model = createAutoDto.Model,
+                Condition = createAutoDto.Condition,
+                ModelYear = createAutoDto.ModelYear,
+                Mileage = createAutoDto.Mileage,
+                Description = createAutoDto.Description,
+                Color = createAutoDto.Color,
+                Price = createAutoDto.Price,
+                UserId = createAutoDto.UserId,
+                //TODO: Need to collect location data for time being setting it to 0,0
+                Location = new NetTopologySuite.Geometries.Point(0, 0) { SRID = 4326 }
+            };
+
+            await _autoRepository.AddAsync(autoEntity);
+
+            return autoEntity.ToDto();
         }
 
         public async Task<IList<AutoDto>> SearchAutos(AutoSearchDto autoSearchDto)

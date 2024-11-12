@@ -1,8 +1,8 @@
-using Auto.BizLogic;
-using Microsoft.EntityFrameworkCore;
-using Auto.Data;
-using Microsoft.Extensions.Options;
 using Auto.API.Middleware;
+using Auto.BizLogic;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 
 namespace Auto.API
 {
@@ -28,7 +28,14 @@ namespace Auto.API
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            //builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "Blazor.Auto", Version = "v1" });
+
+                // Register the operation filter to add default response types for 400 and 500
+                options.OperationFilter<AddDefaultResponseTypesOperationFilter>();
+            });
 
             builder.Services.AddAutoBizLogicServices(builder.Configuration);
 

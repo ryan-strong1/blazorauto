@@ -17,6 +17,7 @@ namespace Auto.BizLogic
             services.AddScoped<IOfferService, OfferService>();
 
             services.AddScoped<IValidator<CreateOfferDto>, CreateOfferDtoValidator>();
+            services.AddScoped<IValidator<CreateAutoDto>, CreateAutoDtoValidator>();
 
             services.AddAutoDataServices(configuration);
             return services;
