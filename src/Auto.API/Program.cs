@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Auto.Data;
 using Microsoft.Extensions.Options;
 using Auto.API.Middleware;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Auto.API
 {
@@ -29,6 +30,12 @@ namespace Auto.API
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            //replace the default validation response with our custom response model for consistency
+            builder.Services
+                .Configure<ApiBehaviorOptions>(options =>
+                    options.InvalidModelStateResponseFactory = ctx => new ApiResponseValidationResult()
+                );
 
             builder.Services.AddAutoBizLogicServices(builder.Configuration);
 
