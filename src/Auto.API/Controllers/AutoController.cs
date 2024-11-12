@@ -19,6 +19,18 @@ namespace Auto.API.Controllers
             _logger = logger;
         }
 
+        [HttpPost]
+        [ProducesResponseType(typeof(ApiResponse<AutoDto>), 201)]
+        [ProducesResponseType(typeof(ApiResponse<string>), 400)]
+        public async Task<ActionResult<ApiResponse<AutoDto>>> CreateAuto(CreateAutoDto createAutoDto)
+        {
+            var auto = await _autoService.CreateAuto(createAutoDto);
+
+            var url = Url.Action(nameof(GetAutoById), new { id = auto.AutoId });
+
+            return Created(url, new ApiResponse<AutoDto>(auto, message: "Auto created successfully"));
+        }
+
         [HttpGet("search")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<AutoDto>>), 200)]
         [ProducesResponseType(404)]

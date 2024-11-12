@@ -1,8 +1,13 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
 namespace Auto.BizLogic.Models.Dto
 {
-    public class AutoDto
+    public class CreateAutoDto
     {
-        public int AutoId { get; set; }
         public required string Make { get; set; }
 
         public required string Model { get; set; }
